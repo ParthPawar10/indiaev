@@ -102,7 +102,7 @@ st.sidebar.markdown('<div class="sidebar-title">India EV Market</div>', unsafe_a
 pages = ["Dashboard", "Visualizations", "Predictions", "About"]
 
 # Get current page from URL query params or default
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 current_page = query_params.get("page", ["Dashboard"])[0]
 if current_page not in pages:
     current_page = "Dashboard"
