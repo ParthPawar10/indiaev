@@ -12,6 +12,9 @@ from statsmodels.tsa.arima.model import ARIMA
 from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 warnings.filterwarnings("ignore")
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=DeprecationWarning)
+st.set_option("client.showErrorDetails", False)
 st.set_page_config(page_title="India EV Market Dashboard", layout="wide")
 
 # Load data with caching
@@ -82,13 +85,15 @@ st.markdown(
     }
     /* Sidebar Title */
     .sidebar-title {
-        font-size: 32px;
-        font-weight: 900;
-        color: #138808;
-        text-align: center;
-        margin-bottom: 2rem;
-        user-select: none;
-        letter-spacing: 1.1px;
+    font-size: 32px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-bottom: 2rem;
+    user-select: none;
+    letter-spacing: 1.1px;
     }
     </style>
     """,
@@ -99,7 +104,7 @@ st.markdown(
 st.sidebar.markdown('<div class="sidebar-title">India EV Market</div>', unsafe_allow_html=True)
 
 # Define pages
-pages = ["Dashboard", "Visualizations", "Predictions", "About"]
+pages = ["About", "Dashboard", "Visualizations", "Forcast"]
 
 # Get current page from URL query params or default
 query_params = st.experimental_get_query_params()
@@ -195,39 +200,64 @@ if current_page == "Dashboard":
 
     with col_left:
         st.markdown("#### Manufacturer Market Share")
-        maker_sales = filtered_sales.groupby('Maker')[sales_years].sum()
-        maker_selected_sales = maker_sales.loc[:, year_range_years].sum(axis=1)
+        # Set a minimum year for the data (2015)
+        min_year = 2015
+        # Adjust the selected years to ensure they start from 2015
+        adjusted_years = [str(year) for year in year_range_years if int(year) >= min_year]
+        # If no years are above 2015, default to 2015
+        if not adjusted_years:
+            adjusted_years = [str(min_year)]
+        # Calculating sales for selected years
+        maker_sales = filtered_sales.groupby('Maker')[adjusted_years].sum()
+        maker_selected_sales = maker_sales.sum(axis=1)
         maker_share = maker_selected_sales / maker_selected_sales.sum()
+        # Categorizing manufacturers
         large_makers = maker_share[maker_share >= 0.05]
         others_share = maker_share[maker_share < 0.05].sum()
+        # Creating the pie chart data
         maker_pie = pd.concat([large_makers, pd.Series({"Others": others_share})])
-        fig_pie = px.pie(values=maker_pie.values, names=maker_pie.index, hole=0.4, template="plotly_white")
+        # Plotting the pie chart
+        fig_pie = px.pie(
+            values=maker_pie.values,
+            names=maker_pie.index,
+            hole=0.4,
+            template="plotly_white"
+        )
         st.plotly_chart(fig_pie, use_container_width=True)
 
     with col_right:
         st.markdown("#### Operational Public Charging Stations")
-        state_filter = st.multiselect(
-            "Select States to Highlight (Leave Empty for All)", 
-            operational_pcs['State'].unique(),
-            default=[]
-        )
-        filtered_pcs = operational_pcs[operational_pcs['State'].isin(state_filter)] if state_filter else operational_pcs
-        fig_map = px.choropleth(
-            filtered_pcs,
-            geojson=india_geojson,
-            locations='State',
-            color='No. of Operational PCS',
-            featureidkey='properties.NAME_1',
-            hover_name='State',
-            color_continuous_scale="Viridis",
-            labels={'No. of Operational PCS': 'Operational PCS'},
-            template="plotly_dark"
-        )
-        fig_map.update_geos(fitbounds="locations", visible=False)
-        st.plotly_chart(fig_map, use_container_width=True)
-
+        
+        # Create a row with two columns: one for dropdown and one for the OK button
+        col1, col2 = st.columns([4, 1])
+        
+        with col1:
+            state_filter = st.multiselect(
+                "Select States to Highlight", 
+                operational_pcs['State'].unique(),
+                default=[]
+            )
+        
+        with col2:
+            show_map = st.button("OK", key="show_map")
+    
+        if show_map:
+            filtered_pcs = operational_pcs[operational_pcs['State'].isin(state_filter)] if state_filter else operational_pcs
+            fig_map = px.choropleth(
+                filtered_pcs,
+                geojson=india_geojson,
+                locations='State',
+                color='No. of Operational PCS',
+                featureidkey='properties.NAME_1',
+                hover_name='State',
+                color_continuous_scale="Viridis",
+                labels={'No. of Operational PCS': 'Operational PCS'},
+                template="plotly_dark"
+            )
+            fig_map.update_geos(fitbounds="locations", visible=False)
+            st.plotly_chart(fig_map, use_container_width=True) 
     st.markdown("---")
-
+                                                                  
 elif current_page == "Visualizations":
     st.title("EV Market and Infrastructure Visualizations")
     st.markdown("Explore various aspects of India's Electric Vehicle market through interactive visualizations")
@@ -239,7 +269,7 @@ elif current_page == "Visualizations":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("1. Total EV Sales Growth")
+            st.subheader("Total EV Sales Growth")
             all_sales = ev_sales[[str(y) for y in range(2015, 2025)]].sum()
             fig1 = px.area(
                 x=all_sales.index,
@@ -252,7 +282,7 @@ elif current_page == "Visualizations":
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            st.subheader("2. Category-wise Sales Comparison")
+            st.subheader("Category-wise Sales Comparison")
             cat_sales = ev_sales.groupby('Cat')[[str(y) for y in range(2015, 2025)]].sum().T
             fig2 = px.line(
                 cat_sales,
@@ -263,7 +293,7 @@ elif current_page == "Visualizations":
             fig2.update_layout(yaxis_title="Units Sold", xaxis_title="Year")
             st.plotly_chart(fig2, use_container_width=True)
         
-        st.subheader("3. Top 10 EV Models by Sales")
+        st.subheader("Top 10 EV Models by Sales")
         if 'Model' in ev_sales.columns:
             top_models = ev_sales.groupby('Model')[[str(y) for y in range(2020,2025)]].sum().sum(axis=1).nlargest(10)
         else:
@@ -283,7 +313,7 @@ elif current_page == "Visualizations":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("4. Top EV Manufacturers")
+            st.subheader("Top EV Manufacturers")
             top_makers = ev_sales.groupby('Maker')[[str(y) for y in range(2020, 2025)]].sum().sum(axis=1).nlargest(10)
             fig4 = px.bar(
                 top_makers,
@@ -295,9 +325,8 @@ elif current_page == "Visualizations":
                 template="plotly_white"
             )
             st.plotly_chart(fig4, use_container_width=True)
-            
         with col2:
-            st.subheader("5. Manufacturer Growth Trajectory")
+            st.subheader("Manufacturer Growth Trajectory")
             available_makers = sorted(list(set(ev_maker['EV Maker']).union(set(ev_sales['Maker']))))
             selected_makers = st.multiselect(
                 "Select Manufacturers to Compare",
@@ -329,7 +358,7 @@ elif current_page == "Visualizations":
             else:
                 st.info("Please select manufacturers to compare")
         
-        st.subheader("6. Manufacturer Geographical Distribution")
+        st.subheader("Manufacturer Geographical Distribution")
         maker_loc = ev_maker.groupby(['State', 'Place']).size().reset_index(name='Count')
         fig6 = px.treemap(
             maker_loc,
@@ -345,9 +374,8 @@ elif current_page == "Visualizations":
     with tab3:
         st.header("Geographical Distribution")
         col1, col2 = st.columns(2)
-        
         with col1:
-            st.subheader("7. Public Charging Stations Distribution")
+            st.subheader("Public Charging Stations Distribution")
             fig7 = px.choropleth(
                 operational_pcs,
                 geojson=india_geojson,
@@ -363,7 +391,7 @@ elif current_page == "Visualizations":
             st.plotly_chart(fig7, use_container_width=True)
             
         with col2:
-            st.subheader("8. Top States for EV Infrastructure")
+            st.subheader("Top States for EV Infrastructure")
             top_states = operational_pcs.sort_values('No. of Operational PCS', ascending=False).head(10)
             fig8 = px.bar(
                 top_states,
@@ -375,7 +403,7 @@ elif current_page == "Visualizations":
             )
             st.plotly_chart(fig8, use_container_width=True)
         
-        st.subheader("9. EV Manufacturer Presence by State")
+        st.subheader("EV Manufacturer Presence by State")
         state_makers = ev_maker.groupby('State').size().reset_index(name='Count')
         state_makers['State'] = state_makers['State'].str.upper()
         geojson_states = [f['properties']['NAME_1'].upper() for f in india_geojson['features']]
@@ -404,7 +432,7 @@ elif current_page == "Visualizations":
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("10. Vehicle Class Registration")
+            st.subheader("Vehicle Class Registration")
             if vehicle_class['Total Registration'].dtype == object:
                 vehicle_class['Total Registration'] = vehicle_class['Total Registration'].str.replace(',', '').astype(int)
             else:
@@ -422,7 +450,7 @@ elif current_page == "Visualizations":
             st.plotly_chart(fig10, use_container_width=True)
             
         with col2:
-            st.subheader("11. EV Market Share by Category")
+            st.subheader("EV Market Share by Category")
             total_ev_by_cat = ev_sales.groupby('Cat')[[str(y) for y in range(2020, 2025)]].sum().sum(axis=1)
             fig11 = px.pie(
                 total_ev_by_cat,
@@ -434,7 +462,7 @@ elif current_page == "Visualizations":
             )
             st.plotly_chart(fig11, use_container_width=True)
         
-        st.subheader("12. Category-wise Yearly Growth")
+        st.subheader("Category-wise Yearly Growth")
         cat_growth = ev_sales.groupby('Cat')[[str(y) for y in range(2015, 2025)]].sum().T.pct_change().fillna(0) * 100
         fig12 = px.line(
             cat_growth,
@@ -533,8 +561,8 @@ elif current_page == "Visualizations":
         st.plotly_chart(fig, use_container_width=True)
 
 
-elif current_page == "Predictions":
-    st.title("EV Market Predictions")
+elif current_page == "Forcast":
+    st.title("EV Market Forcast")
     st.markdown("Compare forecasting models and predict future EV adoption trends")
     
     pred_tab1, pred_tab2, pred_tab3,pred_tab4 = st.tabs([
@@ -598,7 +626,7 @@ elif current_page == "Predictions":
         }).highlight_min(subset=["MAE", "RMSE"], color='lightgreen')
                      .highlight_max(subset=["R²"], color='lightgreen'))
         
-        st.subheader("Model Predictions vs Actual")
+        st.subheader("Model Forcast vs Actual")
         fig_compare = go.Figure()
         
         fig_compare.add_trace(go.Scatter(
@@ -729,11 +757,11 @@ elif current_page == "Predictions":
                                      interval_width=0.95)
             prophet_model.fit(prophet_train)
             
-            # Make predictions on test set
+            # Make forcast on test set
             prophet_future = prophet_model.make_future_dataframe(periods=len(prophet_test), freq='YS')
             prophet_forecast = prophet_model.predict(prophet_future)
             
-            # Extract test predictions
+            # Extract test forcast
             prophet_preds = prophet_forecast['yhat'].values[train_idx:train_idx+len(test_years_ts)]
             
             # Calculate metrics
@@ -948,7 +976,7 @@ elif current_page == "Predictions":
             "Actual": test_sales_e
         })
         
-        # Add predictions and errors for each model
+        # Add forcast and errors for each model
         for name, model in error_models.items():
             preds = model.predict(test_years_e)
             error_df[f"{name} Prediction"] = preds
@@ -1067,7 +1095,7 @@ elif current_page == "Predictions":
             st.success("Model performs well across all tested years.")   
     with pred_tab4:
         st.header("Long-Term Forecast")
-        st.markdown("Generate and visualize long-term EV adoption predictions using the best model")
+        st.markdown("Generate and visualize long-term EV adoption forcast using the best model")
         
         # Select vehicle category
         selected_cat_lt = st.selectbox(
@@ -1187,13 +1215,13 @@ elif current_page == "Predictions":
             
             st.success(f"Best model for {selected_cat_lt}: **{best_model_name}** (RMSE: {best_model_info['RMSE']:.2f})")
             
-            # Generate future predictions
+            # Generate future forcast
             future_years = np.arange(years_lt[-1] + 1, years_lt[-1] + 1 + forecast_years)
             all_years = np.concatenate([years_lt, future_years])
             
-            # Make predictions
+            # Make forcast
             if best_model_name == "Prophet":
-                # Use Prophet for predictions
+                # Use Prophet for forcast
                 future_df = prophet_model_lt.make_future_dataframe(periods=forecast_years, freq='YS')
                 forecast_result = prophet_model_lt.predict(future_df)
                 forecast_values = forecast_result['yhat'].values
@@ -1201,7 +1229,7 @@ elif current_page == "Predictions":
                 upper_bound = forecast_result['yhat_upper'].values
                 has_bounds = True
             elif best_model_name == "ARIMA":
-                # Use ARIMA for predictions
+                # Use ARIMA for forcast
                 forecast_result = arima_fit_lt.forecast(steps=forecast_years)
                 forecast_values = np.concatenate([sales_lt, forecast_result])
                 has_bounds = False
