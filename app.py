@@ -45,105 +45,101 @@ ev_maker, ev_sales, operational_pcs, vehicle_class = load_data()
 india_geojson = load_geojson()
 
 # === Sidebar UI ===
+# CSS for button-style sidebar navigation + light mode base
+base_css = """
+<style>
+.sidebar .sidebar-content {
+    padding: 1rem 1rem 0 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.sidebar-button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #222222;
+    background-color: #f0f2f6;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    user-select: none;
+    box-shadow: 0 0 0 2px transparent;
+}
+.sidebar-button:hover {
+    background-color: #dbeeff;
+    color: #1a73e8;
+}
+.sidebar-button.active {
+    background: linear-gradient(90deg, #FF9933, #138808);
+    color: white !important;
+    box-shadow: 0 6px 12px rgba(255,153,51,0.7);
+    font-weight: 700;
+}
+.sidebar-title {
+    font-size: 32px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-bottom: 2rem;
+    user-select: none;
+    letter-spacing: 1.1px;
+}
+</style>
+"""
 
-# CSS for button-style sidebar navigation
-st.markdown(
-   """
-   <style>
-   /* Your existing sidebar styles */
-   .sidebar .sidebar-content {
-       padding: 1rem 1rem 0 1rem;
-       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-   }
-   .sidebar-button {
-       display: block;
-       width: 100%;
-       padding: 0.75rem 1rem;
-       margin-bottom: 12px;
-       font-size: 18px;
-       font-weight: 600;
-       color: #222222;
-       background-color: #f0f2f6;
-       border: none;
-       border-radius: 12px;
-       cursor: pointer;
-       text-align: left;
-       transition: background-color 0.3s ease, color 0.3s ease;
-       user-select: none;
-       box-shadow: 0 0 0 2px transparent;
-   }
-   .sidebar-button:hover {
-       background-color: #dbeeff;
-       color: #1a73e8;
-   }
-   .sidebar-button.active {
-       background: linear-gradient(90deg, #FF9933, #138808);
-       color: white !important;
-       box-shadow: 0 6px 12px rgba(255,153,51,0.7);
-       font-weight: 700;
-   }
-   .sidebar-title {
-       font-size: 32px;
-       font-weight: 900;
-       background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
-       -webkit-background-clip: text;
-       -webkit-text-fill-color: transparent;
-       text-align: center;
-       margin-bottom: 2rem;
-       user-select: none;
-       letter-spacing: 1.1px;
-   }
-
-   /* DARK MODE OVERRIDES */
-   /* Background */
-   .css-18e3th9 {  /* Main content container */
-       background-color: #121212 !important;
-       color: #e0e0e0 !important;
-   }
-   .css-1d391kg {  /* Sidebar */
-       background-color: #1e1e1e !important;
-       color: #e0e0e0 !important;
-   }
-   /* Text */
-   .css-1d391kg, .css-1d391kg * {
-       color: #e0e0e0 !important;
-   }
-   /* Buttons background & text */
-   .sidebar-button {
-       background-color: #333 !important;
-       color: #ccc !important;
-       box-shadow: none !important;
-   }
-   .sidebar-button:hover {
-       background-color: #444 !important;
-       color: #fff !important;
-   }
-   .sidebar-button.active {
-       background: linear-gradient(90deg, #FF9933, #138808) !important;
-       color: white !important;
-       box-shadow: 0 6px 12px rgba(255,153,51,0.7) !important;
-   }
-   /* Scrollbar for sidebar */
-   ::-webkit-scrollbar {
-       width: 8px;
-   }
-   ::-webkit-scrollbar-track {
-       background: #121212;
-   }
-   ::-webkit-scrollbar-thumb {
-       background-color: #555;
-       border-radius: 4px;
-   }
-   </style>
-   """,
-   unsafe_allow_html=True,
-)
+dark_mode_css = """
+<style>
+body, .main, .block-container {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+.sidebar .sidebar-content {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.sidebar-button {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.sidebar-button:hover {
+    background-color: #3a3a3a !important;
+    color: #ff9933 !important;
+}
+.sidebar-button.active {
+    background: linear-gradient(90deg, #FF9933, #138808) !important;
+    color: white !important;
+    box-shadow: 0 6px 12px rgba(255,153,51,0.7) !important;
+}
+.sidebar-title {
+    background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    text-align: center !important;
+}
+h1, h2, h3, h4, h5, h6, p, span {
+    color: #e0e0e0 !important;
+}
+</style>
+"""
+# Inject base CSS always
+st.markdown(base_css, unsafe_allow_html=True)
 
 # Sidebar title
 st.sidebar.markdown('<div class="sidebar-title">India EV Market</div>', unsafe_allow_html=True)
-
+dark_mode = st.sidebar.checkbox("🌙 Dark Mode", value=False)
+if dark_mode:
+    st.markdown(dark_mode_css, unsafe_allow_html=True)
 # Define pages
-pages = ["About", "Dashboard", "Visualizations", "Forcast"]
+pages = ["About", "Dashboard", "Visualizations", "Forecast","Summary"]
 
 # Get current page from URL query params or default
 query_params = st.experimental_get_query_params()
@@ -600,8 +596,8 @@ elif current_page == "Visualizations":
         st.plotly_chart(fig, use_container_width=True)
 
 
-elif current_page == "Forcast":
-    st.title("EV Market Forcast")
+elif current_page == "Forecast":
+    st.title("EV Market Forecast")
     st.markdown("Compare forecasting models and predict future EV adoption trends")
     
     pred_tab1, pred_tab2, pred_tab3,pred_tab4 = st.tabs([
@@ -665,7 +661,7 @@ elif current_page == "Forcast":
         }).highlight_min(subset=["MAE", "RMSE"], color='lightgreen')
                      .highlight_max(subset=["R²"], color='lightgreen'))
         
-        st.subheader("Model Forcast vs Actual")
+        st.subheader("Model Forecast vs Actual")
         fig_compare = go.Figure()
         
         fig_compare.add_trace(go.Scatter(
@@ -796,11 +792,11 @@ elif current_page == "Forcast":
                                      interval_width=0.95)
             prophet_model.fit(prophet_train)
             
-            # Make forcast on test set
+            # Make forecast on test set
             prophet_future = prophet_model.make_future_dataframe(periods=len(prophet_test), freq='YS')
             prophet_forecast = prophet_model.predict(prophet_future)
             
-            # Extract test forcast
+            # Extract test forecast
             prophet_preds = prophet_forecast['yhat'].values[train_idx:train_idx+len(test_years_ts)]
             
             # Calculate metrics
@@ -1015,7 +1011,7 @@ elif current_page == "Forcast":
             "Actual": test_sales_e
         })
         
-        # Add forcast and errors for each model
+        # Add forecast and errors for each model
         for name, model in error_models.items():
             preds = model.predict(test_years_e)
             error_df[f"{name} Prediction"] = preds
@@ -1134,7 +1130,7 @@ elif current_page == "Forcast":
             st.success("Model performs well across all tested years.")   
     with pred_tab4:
         st.header("Long-Term Forecast")
-        st.markdown("Generate and visualize long-term EV adoption forcast using the best model")
+        st.markdown("Generate and visualize long-term EV adoption forecast using the best model")
         
         # Select vehicle category
         selected_cat_lt = st.selectbox(
@@ -1254,13 +1250,13 @@ elif current_page == "Forcast":
             
             st.success(f"Best model for {selected_cat_lt}: **{best_model_name}** (RMSE: {best_model_info['RMSE']:.2f})")
             
-            # Generate future forcast
+            # Generate future forecast
             future_years = np.arange(years_lt[-1] + 1, years_lt[-1] + 1 + forecast_years)
             all_years = np.concatenate([years_lt, future_years])
             
-            # Make forcast
+            # Make forecast
             if best_model_name == "Prophet":
-                # Use Prophet for forcast
+                # Use Prophet for forecast
                 future_df = prophet_model_lt.make_future_dataframe(periods=forecast_years, freq='YS')
                 forecast_result = prophet_model_lt.predict(future_df)
                 forecast_values = forecast_result['yhat'].values
@@ -1268,7 +1264,7 @@ elif current_page == "Forcast":
                 upper_bound = forecast_result['yhat_upper'].values
                 has_bounds = True
             elif best_model_name == "ARIMA":
-                # Use ARIMA for forcast
+                # Use ARIMA for forecast
                 forecast_result = arima_fit_lt.forecast(steps=forecast_years)
                 forecast_values = np.concatenate([sales_lt, forecast_result])
                 has_bounds = False
@@ -1432,3 +1428,37 @@ elif current_page == "About":
     <p>India EV Market Analysis - An Interactive Analysis Platform</p>
 </div>
 """, unsafe_allow_html=True)
+
+elif current_page == "Summary":
+    st.title("India's Electric Vehicle Market: Summary")
+
+    st.markdown("""
+    India’s electric vehicle (EV) market has witnessed a remarkable transformation over the last two decades, driven by government policies, technological advancements, and growing consumer interest.
+
+    **Market Evolution:**
+    Starting from early policy frameworks in the early 2000s, India has steadily built a robust ecosystem for EV adoption. The National Electric Mobility Mission Plan and subsequent schemes like FAME have incentivized manufacturers and buyers alike, pushing the market toward rapid growth.
+
+    **Key Market Segments:**
+    - **Two-wheelers:** Dominating the market with affordable models from Ola, Okinawa, and Ather.
+    - **Three-wheelers:** Widely used for urban transport, with players like YC and Mahindra leading innovation.
+    - **Four-wheelers:** Growing slowly but steadily with major automakers like Tata and MG investing heavily.
+
+    **Geographic Trends:**
+    States like Maharashtra, Karnataka, and Tamil Nadu are front-runners due to better infrastructure, policy support, and consumer awareness.
+
+    **Challenges & Opportunities:**
+    While EV adoption faces challenges such as high upfront costs and limited charging infrastructure, the sector is poised for exponential growth fueled by technological innovation and expanding government support.
+
+    **Future Outlook:**
+    By 2030, India's EV market is expected to exceed $100 billion, transforming the transportation landscape and significantly reducing carbon emissions.
+
+    This project leverages data-driven insights to map the trajectory of India’s EV market and highlight critical factors shaping its future.
+    """)
+
+    st.markdown("""
+    <hr style='border:1px solid #e0e0e0;'>
+    <div style='text-align: center;'>
+        <h4>Developed by Parth</h4>
+        <p>India EV Market Analysis - Interactive Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
