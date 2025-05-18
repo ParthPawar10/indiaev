@@ -48,56 +48,95 @@ india_geojson = load_geojson()
 
 # CSS for button-style sidebar navigation
 st.markdown(
-    """
-    <style>
-    /* Sidebar container padding */
-    .sidebar .sidebar-content {
-        padding: 1rem 1rem 0 1rem;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    /* Buttons for sidebar nav */
-    .sidebar-button {
-        display: block;
-        width: 100%;
-        padding: 0.75rem 1rem;
-        margin-bottom: 12px;
-        font-size: 18px;
-        font-weight: 600;
-        color: #222222;
-        background-color: #f0f2f6;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 0.3s ease, color 0.3s ease;
-        user-select: none;
-        box-shadow: 0 0 0 2px transparent;
-    }
-    .sidebar-button:hover {
-        background-color: #dbeeff;
-        color: #1a73e8;
-    }
-    .sidebar-button.active {
-        background: linear-gradient(90deg, #FF9933, #138808);
-        color: white !important;
-        box-shadow: 0 6px 12px rgba(255,153,51,0.7);
-        font-weight: 700;
-    }
-    /* Sidebar Title */
-    .sidebar-title {
-    font-size: 32px;
-    font-weight: 900;
-    background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-align: center;
-    margin-bottom: 2rem;
-    user-select: none;
-    letter-spacing: 1.1px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
+   """
+   <style>
+   /* Your existing sidebar styles */
+   .sidebar .sidebar-content {
+       padding: 1rem 1rem 0 1rem;
+       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   }
+   .sidebar-button {
+       display: block;
+       width: 100%;
+       padding: 0.75rem 1rem;
+       margin-bottom: 12px;
+       font-size: 18px;
+       font-weight: 600;
+       color: #222222;
+       background-color: #f0f2f6;
+       border: none;
+       border-radius: 12px;
+       cursor: pointer;
+       text-align: left;
+       transition: background-color 0.3s ease, color 0.3s ease;
+       user-select: none;
+       box-shadow: 0 0 0 2px transparent;
+   }
+   .sidebar-button:hover {
+       background-color: #dbeeff;
+       color: #1a73e8;
+   }
+   .sidebar-button.active {
+       background: linear-gradient(90deg, #FF9933, #138808);
+       color: white !important;
+       box-shadow: 0 6px 12px rgba(255,153,51,0.7);
+       font-weight: 700;
+   }
+   .sidebar-title {
+       font-size: 32px;
+       font-weight: 900;
+       background: linear-gradient(90deg, #FF9933, #FFFFFF, #138808);
+       -webkit-background-clip: text;
+       -webkit-text-fill-color: transparent;
+       text-align: center;
+       margin-bottom: 2rem;
+       user-select: none;
+       letter-spacing: 1.1px;
+   }
+
+   /* DARK MODE OVERRIDES */
+   /* Background */
+   .css-18e3th9 {  /* Main content container */
+       background-color: #121212 !important;
+       color: #e0e0e0 !important;
+   }
+   .css-1d391kg {  /* Sidebar */
+       background-color: #1e1e1e !important;
+       color: #e0e0e0 !important;
+   }
+   /* Text */
+   .css-1d391kg, .css-1d391kg * {
+       color: #e0e0e0 !important;
+   }
+   /* Buttons background & text */
+   .sidebar-button {
+       background-color: #333 !important;
+       color: #ccc !important;
+       box-shadow: none !important;
+   }
+   .sidebar-button:hover {
+       background-color: #444 !important;
+       color: #fff !important;
+   }
+   .sidebar-button.active {
+       background: linear-gradient(90deg, #FF9933, #138808) !important;
+       color: white !important;
+       box-shadow: 0 6px 12px rgba(255,153,51,0.7) !important;
+   }
+   /* Scrollbar for sidebar */
+   ::-webkit-scrollbar {
+       width: 8px;
+   }
+   ::-webkit-scrollbar-track {
+       background: #121212;
+   }
+   ::-webkit-scrollbar-thumb {
+       background-color: #555;
+       border-radius: 4px;
+   }
+   </style>
+   """,
+   unsafe_allow_html=True,
 )
 
 # Sidebar title
